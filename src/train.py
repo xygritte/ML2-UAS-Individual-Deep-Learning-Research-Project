@@ -74,7 +74,8 @@ def run_epoch(model, loader, criterion, optimizer, device, training=True):
 def train_one(experiment: str, epochs: int, batch_size: int, output_dir: Path, device: str):
     config = EXPERIMENTS[experiment]
     set_seed(42)
-    train_ds, val_ds, test_ds = get_cifar10_datasets()
+    use_pretrained = config["model"] == "resnet18"
+    train_ds, val_ds, test_ds = get_cifar10_datasets(pretrained_model=use_pretrained)
     loaders = {
         "train": DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=0),
         "val": DataLoader(val_ds, batch_size=batch_size, shuffle=False, num_workers=0),
@@ -92,14 +93,16 @@ def train_one(experiment: str, epochs: int, batch_size: int, output_dir: Path, d
     for epoch in range(1, epochs + 1):
         train_metrics = run_epoch(model, loaders["train"], criterion, optimizer, device, True)
         val_metrics = run_epoch(model, loaders["val"], criterion, optimizer, device, False)
-        history.append({
-            "experiment": experiment,
-            "epoch": epoch,
-            "train_loss": train_metrics["loss"],
-            "train_accuracy": train_metrics["accuracy"],
-            "val_loss": val_metrics["loss"],
-            "val_accuracy": val_metrics["accuracy"],
-        })
+        history.append(
+            {
+                "experiment": experiment,
+                "epoch": epoch,
+                "train_loss": train_metrics["loss"],
+                "train_accuracy": train_metrics["accuracy"],
+                "val_loss": val_metrics["loss"],
+                "val_accuracy": val_metrics["accuracy"],
+            }
+        )
         if val_metrics["loss"] < best_val:
             best_val = val_metrics["loss"]
             bad_epochs = 0
@@ -113,7 +116,11 @@ def train_one(experiment: str, epochs: int, batch_size: int, output_dir: Path, d
     test_metrics = run_epoch(model, loaders["test"], criterion, optimizer, device, False)
     pd.DataFrame(history).to_csv(output_dir / f"{experiment}_history.csv", index=False)
     with open(output_dir / f"{experiment}_metrics.json", "w", encoding="utf-8") as f:
-        json.dump({k: v for k, v in test_metrics.items() if k not in {"y_true", "y_pred"}}, f, indent=2)
+        json.dump(
+            {k: v for k, v in test_metrics.items() if k not in {"y_true", "y_pred"}},
+            f,
+            indent=2,
+        )
     pd.DataFrame({"y_true": test_metrics["y_true"], "y_pred": test_metrics["y_pred"]}).to_csv(
         output_dir / f"{experiment}_predictions.csv", index=False
     )
