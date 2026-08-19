@@ -1,0 +1,9 @@
+# Dependensi non-PyTorch untuk Google Colab.
+# Colab biasanya sudah menyediakan PyTorch dengan dukungan GPU.
+scikit-learn
+numpy
+pandas
+matplotlib
+seaborn
+Pillow
+tqdm
