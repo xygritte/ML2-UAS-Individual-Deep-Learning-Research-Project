@@ -7,9 +7,10 @@
 \usepackage{url}
 \usepackage{cite}
 \usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
 \urlstyle{same}
 
-\graphicspath{{../outputs/}}
+\graphicspath{{figures/}}
 
 \title{Comparative Analysis of CNN Baseline, Dropout, and Transfer Learning for CIFAR-10 Image Classification}
 
@@ -20,6 +21,7 @@ NIM: 452024611066\\
 Email: afurqonramadhani24@student.cs.unida.gontor.ac.id}}
 
 \begin{document}
+\pagestyle{empty}
 \maketitle
 
 \begin{abstract}
@@ -46,7 +48,7 @@ Transfer learning dipelajari sebagai mekanisme untuk memindahkan pengetahuan dar
 
 Residual learning diperkenalkan oleh He \textit{et al.} untuk membantu optimasi jaringan yang lebih dalam melalui residual connections [3]. Keluarga ResNet kemudian banyak digunakan sebagai arsitektur standar untuk pembelajaran representasi visual.
 
-CIFAR-10 merupakan dataset benchmark untuk klasifikasi citra yang terdiri atas 60.000 citra RGB berukuran 32$\times$32 piksel dan sepuluh kelas [4]. Optimasi training menggunakan Adam, yaitu metode optimasi adaptif yang memanfaatkan estimasi momen pertama dan kedua gradien [5].
+CIFAR-10 merupakan dataset benchmark untuk klasifikasi citra yang terdiri atas 60.000 citra berwarna berukuran 32$\times$32 piksel dan sepuluh kelas [4]. Optimasi training menggunakan Adam, yaitu metode optimasi adaptif yang memanfaatkan estimasi momen pertama dan kedua gradien [5].
 
 \section{Methodology}
 \subsection{Dataset}
@@ -92,7 +94,7 @@ E3 & ResNet-18 & -- & 0.0001 & Yes \\
 
 Training menggunakan batch size 128 dan maksimum 20 epoch pada GPU NVIDIA Tesla T4 di Google Colab. Seed 42 digunakan untuk menjaga reproducibility. Early stopping menggunakan patience 5 berdasarkan validation loss, dan checkpoint dengan validation loss terendah dipertahankan. E1 dan E2 menyelesaikan 20 epoch, sedangkan E3 berhenti pada epoch 12 karena validation loss tidak membaik selama lima epoch berturut-turut.
 
-Evaluasi menggunakan accuracy, precision, recall, dan F1-score dengan macro averaging, serta training curves dan confusion matrix. Source code dan bahan reproducibility tersedia di GitHub: \url{https://github.com/xygritte/ML2-UAS-Individual-Deep-Learning-Research-Project}. Notebook training tersedia di Google Colab: \url{https://colab.research.google.com/drive/1fwiRjbReBhyJQSCI3WAwPdNc5_XqK2eU?usp=sharing}.
+Evaluasi menggunakan accuracy, precision, recall, dan F1-score dengan macro averaging, serta training curves dan confusion matrix. Untuk reproducibility, source code dan notebook training dicantumkan secara eksplisit berikut.\par\smallskip\noindent\textbf{GitHub:}\par\noindent\resizebox{\columnwidth}{!}{\url{https://github.com/xygritte/ML2-UAS-Individual-Deep-Learning-Research-Project}}\par\noindent\textbf{Google Colab:}\par\noindent\resizebox{\columnwidth}{!}{\url{https://colab.research.google.com/drive/1fwiRjbReBhyJQSCI3WAwPdNc5_XqK2eU?usp=sharing}}
 
 \section{Results and Discussion}
 \subsection{Quantitative Results}
@@ -160,6 +162,7 @@ Penelitian ini membandingkan CNN baseline, CNN dengan dropout 0.5, dan ResNet-18
 Secara praktis, hasil ini menunjukkan bahwa transfer learning dengan ResNet-18 sangat efektif untuk klasifikasi CIFAR-10 ketika representasi \textit{pretrained} yang kuat tersedia, meskipun biaya komputasinya lebih tinggi dan monitoring overfitting tetap diperlukan. Penelitian selanjutnya dapat menguji backbone \textit{pretrained} lain, melakukan tuning augmentation dan regularisasi secara lebih sistematis, serta memperluas error analysis menjadi statistik per kelas.
 
 \begin{thebibliography}{00}
+\makeatletter\renewcommand{\@biblabel}[1]{[#1]}\makeatother
 \bibitem{srivastava} N. Srivastava, G. Hinton, A. Krizhevsky, I. Sutskever, and R. Salakhutdinov, ``Dropout: A simple way to prevent neural networks from overfitting,'' \textit{Journal of Machine Learning Research}, vol. 15, pp. 1929--1958, 2014.
 \bibitem{pan} S. J. Pan and Q. Yang, ``A survey on transfer learning,'' \textit{IEEE Transactions on Knowledge and Data Engineering}, vol. 22, no. 10, pp. 1345--1359, 2010.
 \bibitem{he} K. He, X. Zhang, S. Ren, and J. Sun, ``Deep residual learning for image recognition,'' in \textit{Proc. IEEE Conf. Computer Vision and Pattern Recognition (CVPR)}, 2016, pp. 770--778.
