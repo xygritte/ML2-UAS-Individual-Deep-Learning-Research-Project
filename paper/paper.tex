@@ -6,11 +6,10 @@
 \usepackage{booktabs}
 \usepackage{url}
 \usepackage{cite}
-\usepackage{array}
 \usepackage{microtype}
-\graphicspath{{../outputs/}}
+\urlstyle{same}
 
-\title{Perbandingan CNN Baseline, CNN dengan Dropout, dan ResNet-18 Transfer Learning untuk Klasifikasi Citra CIFAR-10}
+\title{Comparative Analysis of CNN Baseline, Dropout, and Transfer Learning for CIFAR-10 Image Classification}
 
 \author{\IEEEauthorblockN{Ahmad Furqon Ramadhani}
 \IEEEauthorblockA{Program Studi Teknik Informatika\\
@@ -22,7 +21,7 @@ Email: afurqonramadhani24@student.cs.unida.gontor.ac.id}}
 \maketitle
 
 \begin{abstract}
-Klasifikasi citra merupakan salah satu penerapan utama deep learning karena model dapat mempelajari representasi visual secara hierarkis dari data. Penelitian ini membandingkan CNN sederhana sebagai baseline, CNN dengan dropout, dan ResNet-18 pretrained dengan transfer learning pada dataset CIFAR-10. Dataset terdiri atas 60.000 citra RGB berukuran 32x32 piksel dalam 10 kelas. Sebanyak 45.000 citra digunakan untuk training, 5.000 untuk validation, dan 10.000 untuk testing. Tiga skenario eksperimen dirancang dengan optimizer Adam: E1 CNN baseline dengan learning rate 0,001, E2 CNN dengan dropout 0,5 dan learning rate 0,001, serta E3 ResNet-18 pretrained dengan learning rate 0,0001. Training menggunakan batch size 128, maksimum 20 epoch, seed 42, dan early stopping berdasarkan validation loss dengan patience 5. Evaluasi menggunakan loss, accuracy, precision, recall, F1-score, training curves, dan confusion matrix. Hasil test menunjukkan E1 memperoleh accuracy 68,92% dan F1 68,53%, E2 67,39% dan 67,22%, sedangkan E3 mencapai 95,22% untuk accuracy dan F1. Analisis training menunjukkan E1 dan E2 belajar relatif stabil tanpa overfitting berat, sementara E3 mulai menunjukkan gap train-validation setelah sekitar epoch 7 dan dihentikan lebih awal pada epoch 12. Confusion matrix juga menunjukkan kesalahan E1 dan E2 lebih banyak terkonsentrasi pada kelas hewan, sedangkan E3 memiliki diagonal yang jauh lebih dominan. Hasil ini menunjukkan bahwa transfer learning berbasis ResNet-18 memberikan representasi yang lebih efektif daripada CNN sederhana pada konfigurasi CIFAR-10 yang digunakan.
+Image classification is a major application of deep learning because models can learn hierarchical visual representations from data. This study compares a simple convolutional neural network (CNN) baseline, a CNN with dropout, and a pretrained ResNet-18 using transfer learning on CIFAR-10. The dataset contains 60,000 RGB images of size 32$\times$32 pixels distributed across 10 classes. The official 50,000 training images were split into 45,000 training and 5,000 validation samples, while the 10,000 official test images were preserved for final evaluation. Three experiments were conducted with Adam: E1 CNN baseline with learning rate 0.001, E2 CNN with dropout 0.5 and learning rate 0.001, and E3 pretrained ResNet-18 with learning rate 0.0001. Training used batch size 128, a maximum of 20 epochs, seed 42, and early stopping based on validation loss with patience 5. Evaluation used loss, accuracy, precision, recall, F1-score, training curves, and confusion matrices. Test results show that E1 achieved 68.92\% accuracy and 68.53\% F1, E2 achieved 67.39\% and 67.22\%, while E3 reached 95.22\% for both accuracy and F1. Training analysis indicates that E1 and E2 remained relatively stable without severe overfitting, whereas E3 developed a larger train-validation gap after approximately epoch 7 and stopped early at epoch 12. Error analysis shows that E1 and E2 produced more confusion among visually similar animal classes, while E3 produced a much stronger diagonal pattern. Overall, transfer learning with ResNet-18 provided substantially more effective representations than the simple CNN configurations used in this study.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -30,142 +29,140 @@ deep learning, computer vision, CIFAR-10, convolutional neural network, dropout,
 \end{IEEEkeywords}
 
 \section{Introduction}
-Klasifikasi citra merupakan masalah penting dalam computer vision dan menjadi salah satu domain utama pembelajaran mendalam. Convolutional Neural Network (CNN) memanfaatkan operasi konvolusi untuk mempelajari pola lokal dan membangun representasi hierarkis dari citra, sehingga berhasil digunakan pada banyak tugas pengenalan visual. Namun, performa CNN sederhana dapat terbatas ketika kompleksitas data meningkat.
+Image classification is an important computer vision problem and a major application area of deep learning. Convolutional Neural Networks (CNNs) use convolution operations to learn local patterns and hierarchical representations, making them effective for visual recognition. However, a simple CNN may have limited representation capacity when the visual variability of the data is high.
 
-Salah satu pendekatan untuk meningkatkan generalisasi model adalah regularisasi, salah satunya dropout. Dropout bekerja dengan menonaktifkan unit secara acak selama training sehingga mengurangi co-adaptation dan dapat membantu mengendalikan overfitting [1]. Pendekatan lain yang lebih kuat adalah transfer learning, yaitu memanfaatkan representasi yang telah dipelajari pada domain sumber kemudian mengadaptasinya pada tugas target [2]. ResNet memperkenalkan residual learning untuk mempermudah optimasi jaringan yang lebih dalam dan menghasilkan representasi visual yang kuat [3].
+One common regularization strategy is dropout, which randomly deactivates units during training and can reduce co-adaptation and overfitting [1]. Another strategy is transfer learning, where representations learned from a source domain are adapted to a target task [2]. ResNet introduced residual learning to simplify the optimization of deeper networks and has become a strong backbone for image recognition [3].
 
-Penelitian ini menggunakan CIFAR-10 sebagai studi kasus karena memiliki 10 kelas citra berwarna dengan ukuran kecil dan distribusi kelas yang seimbang [4]. Tujuan penelitian adalah membandingkan tiga konfigurasi: CNN baseline, CNN dengan dropout 0,5, dan ResNet-18 pretrained melalui transfer learning. Pertanyaan penelitian yang ingin dijawab adalah: (1) apakah dropout meningkatkan generalisasi CNN sederhana; (2) seberapa besar keuntungan transfer learning dibandingkan CNN baseline; dan (3) konfigurasi mana yang memberikan keseimbangan terbaik antara performa test dan perilaku training.
+This study uses CIFAR-10 because it provides ten balanced classes of small RGB images [4]. The study compares three configurations: a CNN baseline, the same CNN with dropout 0.5, and pretrained ResNet-18 with transfer learning. The research questions are: (1) does dropout improve generalization for the simple CNN, (2) how large is the benefit of transfer learning over the baseline, and (3) which configuration provides the best balance between test performance and training behavior?
 
-Penelitian menyediakan perbandingan eksperimen, analisis training dan overfitting, serta error analysis berbasis confusion matrix dari training nyata di GPU Google Colab.
+The contribution is a reproducible comparison based on real training runs, including quantitative evaluation, training analysis, and error analysis.
 
 \section{Related Work}
-CNN merupakan fondasi penting dalam pengenalan citra karena mampu mempelajari fitur visual secara hierarkis [3]. Seiring meningkatnya kedalaman jaringan, proses optimasi dapat menjadi lebih sulit. He \textit{et al.} memperkenalkan residual learning pada ResNet untuk membuat jaringan dalam lebih mudah dioptimalkan [3]. Arsitektur tersebut kemudian banyak digunakan sebagai backbone untuk berbagai tugas computer vision.
+Dropout is a widely used neural-network regularization method. Srivastava \textit{et al.} showed that randomly dropping units during training can reduce co-adaptation and improve generalization [1]. In this work, dropout is explicitly evaluated on the baseline CNN.
 
-Dropout merupakan salah satu regularisasi yang populer untuk mengurangi overfitting. Srivastava \textit{et al.} menunjukkan bahwa random unit dropping dapat mengurangi co-adaptation dan meningkatkan generalisasi pada jaringan neural [1]. Dalam penelitian ini dropout diuji secara eksplisit pada baseline CNN agar pengaruh regularisasi dapat dibandingkan langsung.
+Transfer learning has been studied as a mechanism for transferring knowledge from a source domain to a target task [2]. Pan and Yang provide a broad analysis of transfer learning and its application across different machine-learning settings [2]. Here, pretrained ImageNet features are adapted to CIFAR-10 using ResNet-18.
 
-Transfer learning menyediakan mekanisme untuk memanfaatkan pengetahuan yang diperoleh dari domain sumber pada tugas baru. Pan dan Yang membahas transfer learning sebagai pendekatan untuk memindahkan pengetahuan ketika distribusi atau ruang fitur antar-domain berbeda [2]. Pada penelitian ini, ResNet-18 menggunakan bobot pretrained ImageNet kemudian dilakukan fine-tuning pada CIFAR-10.
+Residual learning was introduced by He \textit{et al.}, allowing deeper networks to be optimized more effectively through residual connections [3]. The resulting ResNet family has become a standard architecture for visual representation learning.
 
-Optimasi model dilakukan dengan Adam, yang menggunakan estimasi momen pertama dan kedua gradien untuk mengatur langkah pembaruan parameter secara adaptif [5].
+CIFAR-10 is a standard benchmark dataset for image classification containing 60,000 32$\times$32 color images across ten classes [4]. Adam is an adaptive optimization method based on estimates of first and second moments of gradients [5] and is used for all experiments in this study.
 
 \section{Methodology}
 \subsection{Dataset}
-CIFAR-10 terdiri atas 60.000 citra RGB berukuran 32x32 piksel yang terbagi menjadi 10 kelas: airplane, automobile, bird, cat, deer, dog, frog, horse, ship, dan truck. Dataset menyediakan 50.000 citra training dan 10.000 citra testing; setiap kelas memiliki 5.000 citra training dan 1.000 citra testing pada pembagian resminya [4].
+CIFAR-10 contains 60,000 RGB images of size 32$\times$32 pixels distributed across 10 classes: airplane, automobile, bird, cat, deer, dog, frog, horse, ship, and truck. The official dataset contains 50,000 training images and 10,000 test images; each class contains 5,000 training and 1,000 test samples [4].
 
-Implementasi penelitian membagi 50.000 citra training menjadi 45.000 citra training dan 5.000 citra validation menggunakan random split dengan seed 42. Pembagian ini dilakukan hanya dari split training asli, sedangkan 10.000 citra test dipertahankan sebagai data pengujian akhir. Dengan demikian tidak terdapat penggunaan data test selama proses training.
+The implementation randomly split the 50,000 official training images into 45,000 training and 5,000 validation samples using seed 42. The 10,000 official test images remained isolated for final testing. Therefore, test data were not used during model training or model selection.
 
 \subsection{Preprocessing}
-Untuk E1 dan E2, citra dipertahankan pada resolusi 32x32 dengan random horizontal flip dan random crop 32x32 pada training. Data validation dan test tidak menerima augmentasi. Normalisasi menggunakan mean CIFAR-10 $(0.4914,0.4822,0.4465)$ dan standar deviasi $(0.2470,0.2435,0.2616)$.
+For E1 and E2, images were kept at 32$\times$32 pixels. Training used random horizontal flip and random crop with padding 4, while validation and test data used no augmentation. CIFAR-10 mean $(0.4914, 0.4822, 0.4465)$ and standard deviation $(0.2470, 0.2435, 0.2616)$ were used for normalization.
 
-Untuk E3, citra diubah menjadi 224x224 agar sesuai dengan input ResNet-18 pretrained. Training menggunakan random horizontal flip, random crop 224x224 dengan padding 8, kemudian normalisasi ImageNet $(0.485,0.456,0.406)$ dengan standar deviasi $(0.229,0.224,0.225)$. Validation dan test menggunakan resize 224x224 tanpa augmentation. Pendekatan ini memastikan preprocessing kompatibel dengan bobot pretrained.
+For E3, images were resized to 224$\times$224 pixels to match the pretrained ResNet-18 input. Training used random horizontal flip and random crop with padding 8, followed by ImageNet normalization with mean $(0.485, 0.456, 0.406)$ and standard deviation $(0.229, 0.224, 0.225)$. Validation and test data used resizing and normalization without augmentation.
 
 \subsection{Baseline CNN}
-Baseline menggunakan CNN sederhana yang terdiri atas tiga blok konvolusi berturut-turut dengan jumlah channel 32, 64, dan 128. Setiap konvolusi diikuti ReLU dan max pooling pada dua blok awal, kemudian adaptive average pooling dan lapisan linear untuk klasifikasi 10 kelas. E1 menggunakan dropout 0,0 sehingga menjadi baseline murni.
+The baseline CNN contains three convolutional blocks with 32, 64, and 128 channels. ReLU activation follows each convolution, max pooling is used in the first two blocks, and adaptive average pooling is followed by a linear classifier for ten classes. E1 uses dropout 0.0 and therefore represents the plain baseline.
 
 \subsection{ResNet-18 Transfer Learning}
-Model utama menggunakan ResNet-18 pretrained. Lapisan klasifikasi terakhir diganti menjadi linear layer dengan 10 keluaran untuk CIFAR-10. Seluruh parameter model di-fine-tune menggunakan data target. ResNet-18 dipilih karena residual learning membantu optimasi jaringan yang lebih dalam dan transfer learning memanfaatkan representasi yang sudah dipelajari [2], [3].
+The main model is ResNet-18 pretrained on ImageNet. Its final classification layer was replaced by a linear layer with ten outputs for CIFAR-10. All parameters were fine-tuned on the target dataset. ResNet-18 was selected because residual learning supports optimization of deeper networks [3], while transfer learning provides a strong pretrained representation [2].
 
-\subsection{Loss dan Optimasi}
-Semua eksperimen menggunakan categorical cross-entropy melalui `CrossEntropyLoss`. Secara umum loss dihitung sebagai
+\subsection{Loss and Optimization}
+All experiments use cross-entropy loss through PyTorch \texttt{CrossEntropyLoss}. The loss is defined as
 \begin{equation}
 L=-\frac{1}{N}\sum_{i=1}^{N}\log p(y_i\mid x_i),
 \end{equation}
-where $p(y_i\mid x_i)$ adalah probabilitas prediksi kelas yang benar. Optimasi menggunakan Adam [5].
+where $p(y_i\mid x_i)$ denotes the predicted probability of the correct class. Optimization uses Adam [5]. No learning-rate scheduler or weight decay was used. Dropout in E2 is the only explicit regularization change between E1 and E2.
 
 \section{Experimental Setup}
-Tiga skenario eksperimen dirancang sesuai requirement tugas: satu baseline, satu variasi regularisasi, dan satu model utama berbasis transfer learning. Konfigurasi utama disajikan pada Tabel I.
+Three scenarios were designed: one baseline, one regularization variant, and one transfer-learning model. Table~I summarizes the main configuration.
 
 \begin{table}[htbp]
-\caption{Konfigurasi Eksperimen}
+\caption{Experimental Configurations}
 \centering
 \begin{tabular}{lcccc}
 \toprule
-Eksperimen & Model & Dropout & LR & Pretrained \\
+Experiment & Model & Dropout & LR & Pretrained \\
 \midrule
-E1 & CNN baseline & 0,0 & 0,001 & Tidak \\
-E2 & CNN + Dropout & 0,5 & 0,001 & Tidak \\
-E3 & ResNet-18 & -- & 0,0001 & Ya \\
+E1 & CNN baseline & 0.0 & 0.001 & No \\
+E2 & CNN + Dropout & 0.5 & 0.001 & No \\
+E3 & ResNet-18 & -- & 0.0001 & Yes \\
 \bottomrule
 \end{tabular}
 \label{tab:exp}
 \end{table}
 
-Training menggunakan batch size 128 dan maksimum 20 epoch pada GPU NVIDIA Tesla T4 di Google Colab. Seed 42 digunakan untuk menjaga reproducibility. Early stopping menggunakan patience 5 berdasarkan validation loss, dan checkpoint terbaik disimpan berdasarkan validation loss terendah. E1 dan E2 menyelesaikan 20 epoch, sedangkan E3 berhenti pada epoch 12 setelah lima epoch berturut-turut tidak menghasilkan perbaikan validation loss.
+Training used batch size 128 and a maximum of 20 epochs on an NVIDIA Tesla T4 GPU in Google Colab. Seed 42 was used for reproducibility. Early stopping used patience 5 based on validation loss, and the checkpoint with the lowest validation loss was retained. E1 and E2 completed 20 epochs, while E3 stopped at epoch 12 because validation loss did not improve for five consecutive epochs.
 
-Metrik evaluasi meliputi accuracy, precision, recall, dan F1-score dengan macro averaging. Selain metrik test, proses training dianalisis menggunakan training loss, validation loss, training accuracy, validation accuracy, dan confusion matrix. Source code serta hasil eksperimen disediakan pada repository: \url{https://github.com/xygritte/ML2-UAS-Individual-Deep-Learning-Research-Project}.
+Evaluation used accuracy, macro-averaged precision, recall, and F1-score, together with training curves and confusion matrices. Source code and reproducibility materials are available at GitHub: \url{https://github.com/xygritte/ML2-UAS-Individual-Deep-Learning-Research-Project}. The training notebook is available at Google Colab: \url{https://colab.research.google.com/drive/1fwiRjbReBhyJQSCI3WAwPdNc5_XqK2eU?usp=sharing}.
 
 \section{Results and Discussion}
 \subsection{Quantitative Results}
-Hasil akhir test ditunjukkan pada Tabel II. Semua nilai berasal dari eksperimen yang benar-benar dijalankan dengan checkpoint terbaik berdasarkan validation loss.
+Table~II presents the final test results. All metrics come from real experiments using the best checkpoint selected by validation loss.
 
 \begin{table}[htbp]
-\caption{Hasil Evaluasi Test}
+\caption{Test Evaluation Results}
 \centering
 \begin{tabular}{lccccc}
 \toprule
-Eksperimen & Loss & Acc. & Prec. & Recall & F1 \\
+Experiment & Loss & Acc. & Prec. & Recall & F1 \\
 \midrule
-E1 & 0,9078 & 68,92\% & 70,16\% & 68,92\% & 68,53\% \\
-E2 & 0,9396 & 67,39\% & 68,12\% & 67,39\% & 67,22\% \\
-E3 & \textbf{0,1549} & \textbf{95,22\%} & \textbf{95,23\%} & \textbf{95,22\%} & \textbf{95,22\%} \\
+E1 & 0.9078 & 68.92\% & 70.16\% & 68.92\% & 68.53\% \\
+E2 & 0.9396 & 67.39\% & 68.12\% & 67.39\% & 67.22\% \\
+E3 & \textbf{0.1549} & \textbf{95.22\%} & \textbf{95.23\%} & \textbf{95.22\%} & \textbf{95.22\%} \\
 \bottomrule
 \end{tabular}
 \label{tab:results}
 \end{table}
 
-E3 memberikan peningkatan accuracy sebesar 26,30 poin persentase dibandingkan E1 dan 27,83 poin dibandingkan E2. Selisih tersebut menunjukkan bahwa pretrained residual representation memberikan keuntungan yang jauh lebih besar daripada perubahan dropout pada baseline CNN untuk konfigurasi eksperimen ini. E2 justru sedikit lebih rendah daripada E1, sehingga dropout 0,5 tidak dapat dikatakan meningkatkan performa pada konfigurasi tersebut.
+E3 improved accuracy by 26.30 percentage points over E1 and by 27.83 points over E2. This large difference indicates that pretrained residual representations provided a substantially stronger feature basis than the simple CNN configurations used here. E2 was slightly worse than E1, so dropout 0.5 cannot be interpreted as an improvement for this particular configuration.
 
 \begin{table}[htbp]
-\caption{Ringkasan Perilaku Training}
+\caption{Training Behavior Summary}
 \centering
 \begin{tabular}{lccc}
 \toprule
-Eksperimen & Epoch terbaik val. & Val. Acc. & Epoch terakhir \\
+Experiment & Best Val. Epoch & Best Val. Acc. & Final Epoch \\
 \midrule
-E1 & 20 & 68,50\% & 20 \\
-E2 & 19 & 66,36\% & 20 \\
-E3 & 7 & 95,74\% & 12 \\
+E1 & 20 & 68.50\% & 20 \\
+E2 & 19 & 66.36\% & 20 \\
+E3 & 7 & 95.74\% & 12 \\
 \bottomrule
 \end{tabular}
 \label{tab:training}
 \end{table}
 
 \subsection{Training Analysis}
-E1 meningkat dari 30,70\% menjadi 69,26\% training accuracy, sementara validation accuracy mencapai 68,50\%. Gap train-validation yang kecil menunjukkan tidak ada overfitting berat, tetapi performa di bawah 70\% menunjukkan keterbatasan baseline [1].
+E1 improved from 30.70\% training accuracy at epoch 1 to 69.26\% at epoch 20, while validation accuracy reached 68.50\%. The small late-stage gap suggests no severe overfitting, although the final performance indicates limited representational capacity.
 
-E2 meningkat dari 26,81\% menjadi 62,82\% training accuracy, dengan validation accuracy 66,26\% pada epoch 20. Dropout tidak meningkatkan test, sehingga regularisasi 0,5 belum memberi keuntungan pada baseline ini.
+E2 improved from 26.81\% to 62.82\% training accuracy and reached 66.26\% validation accuracy at epoch 20. The validation accuracy was 66.36\% at epoch 19. Dropout therefore did not produce a test-performance gain over the baseline.
 
-E3 mencapai validation accuracy 95,74\% pada epoch 7 saat training accuracy 98,92\%. Setelah itu training accuracy mendekati 99\% sementara validation accuracy berfluktuasi dan validation loss meningkat. Pola ini menunjukkan overfitting ringan. Early stopping menghentikan training pada epoch 12.
+E3 reached 95.74\% validation accuracy at epoch 7 while training accuracy was already 98.92\%. After this point, training accuracy remained close to 99\% while validation accuracy fluctuated and validation loss rose. This pattern indicates mild overfitting after approximately epoch 7. Early stopping terminated training at epoch 12.
 
 \subsection{Error Analysis}
-Confusion matrix E1 dan E2 memperlihatkan lebih banyak massa di luar diagonal pada kelas-kelas hewan. Kesalahan yang paling terlihat secara visual terjadi pada kelompok bird, cat, dog, deer, dan frog, yang memiliki kemiripan bentuk dan tekstur pada resolusi 32x32. E2 mempertahankan pola kesalahan yang mirip sehingga dropout tidak mengubah sumber error utama.
+The confusion matrices for E1 and E2 show more off-diagonal mass among animal classes. The most visible confusions involve bird, cat, dog, deer, and frog, which can share similar shapes, textures, and color patterns at 32$\times$32 resolution. E2 preserves a similar error pattern, suggesting that dropout did not substantially change the main source of classification errors.
 
-\begin{figure}[htbp]
+\begin{figure}[!t]
 \centering
-\includegraphics[width=0.92\columnwidth]{E3_confusion_matrix.png}
-\caption{Confusion matrix E3 (ResNet-18 transfer learning). Diagonal yang dominan menunjukkan kesalahan antarkelas yang relatif kecil.}
-\label{fig:cm}
+\includegraphics[width=0.99\columnwidth]{figures/confusion_matrices_all.png}
+\caption{Confusion matrices for E1, E2, and E3. E3 shows a substantially stronger diagonal pattern and fewer visible off-diagonal errors.}
+\label{fig:cms}
 \end{figure}
 
-Sebaliknya, confusion matrix E3 pada Gambar~\ref{fig:cm} hampir seluruhnya terkonsentrasi pada diagonal utama. Residual error yang masih terlihat terutama berasal dari kelas hewan yang secara visual berdekatan, seperti cat dan dog. Dengan demikian, transfer learning meningkatkan accuracy sekaligus mengurangi penyebaran kesalahan antarkelas.
+In contrast, E3 exhibits a much stronger diagonal pattern with fewer off-diagonal errors. Residual mistakes are still visible mainly among visually similar animal classes, particularly cat and dog. The confusion matrices are consistent with the much higher test accuracy and F1-score of E3.
 
 \subsection{Discussion}
-Perbedaan E1 dan E2 mengindikasikan bahwa perubahan regularisasi tidak otomatis mengatasi keterbatasan feature extraction pada CNN sederhana. Dropout dirancang untuk mengurangi co-adaptation [1], tetapi pada eksperimen ini model tanpa dropout tetap menghasilkan accuracy dan F1 yang sedikit lebih tinggi. Sebaliknya, E3 memperoleh keuntungan besar dari representasi pretrained dan residual learning [2], [3].
+The difference between E1 and E2 suggests that changing regularization does not automatically overcome the feature-extraction limitations of a simple CNN. Dropout is intended to reduce co-adaptation [1], but for this configuration the model without dropout still obtained slightly better test accuracy and F1-score. E3, in contrast, benefits from pretrained representations and residual learning [2], [3].
 
-Dari sisi generalisasi, E1 dan E2 menunjukkan train-validation curves yang relatif berdekatan, sedangkan E3 memiliki gap yang lebih besar setelah performa validation mencapai puncak. Ini menunjukkan trade-off yang penting: model dengan kapasitas representasi lebih besar mampu mencapai performa test jauh lebih tinggi, tetapi juga lebih cepat memasuki kondisi overfitting ringan. Penggunaan early stopping menjadi komponen penting dalam menjaga generalisasi E3.
+From a generalization perspective, E1 and E2 maintain relatively close training and validation curves, whereas E3 develops a larger gap after validation performance peaks. The stronger representation capacity of E3 yields a substantial test-performance gain but also makes overfitting appear earlier. For this reason, early stopping is useful for the transfer-learning configuration.
 
 \section{Conclusion}
-Penelitian ini membandingkan CNN baseline, CNN dengan dropout 0,5, dan ResNet-18 pretrained untuk klasifikasi CIFAR-10 melalui tiga skenario eksperimen. Hasil test menunjukkan E3 sebagai konfigurasi terbaik dengan accuracy dan F1 sebesar 95,22\%, dibandingkan E1 sebesar 68,92\% dan E2 sebesar 67,39\%.
+This study compared a CNN baseline, CNN with dropout 0.5, and pretrained ResNet-18 transfer learning for CIFAR-10 image classification. The final test results show that E3 achieved the best performance with 95.22\% accuracy and 95.22\% F1-score, outperforming E1 by 26.30 percentage points and E2 by 27.83 points. E2 did not improve over E1 under the tested dropout setting. Training analysis indicates that E1 and E2 remained comparatively stable, while E3 developed mild overfitting after its best validation epoch and was stopped early.
 
-Analisis training menunjukkan E1 dan E2 belajar relatif stabil tanpa overfitting berat, tetapi kapasitas representasinya terbatas. E2 tidak memberikan peningkatan terhadap baseline pada konfigurasi yang diuji. E3 menghasilkan performa jauh lebih baik melalui transfer learning, namun menunjukkan gejala overfitting ringan setelah sekitar epoch ke-7 dan kemudian dihentikan lebih awal berdasarkan validation loss.
+Practically, the results indicate that transfer learning with ResNet-18 is highly effective for CIFAR-10 classification when a strong pretrained representation is available, although it has higher computational cost and requires careful monitoring of overfitting. Future work can evaluate other pretrained backbones, tune augmentation and regularization more systematically, and perform more detailed per-class error analysis.
 
-Keterbatasan penelitian adalah penggunaan satu dataset dan tiga konfigurasi model. Penelitian berikutnya dapat menguji variasi learning rate, batch size, strategi freezing versus full fine-tuning, augmentation, serta backbone pretrained lain untuk menilai trade-off accuracy dan biaya komputasi.
-
-\begin{thebibliography}{5}\footnotesize
-\bibitem{srivastava2014} N. Srivastava, G. Hinton, A. Krizhevsky, I. Sutskever, and R. Salakhutdinov, ``Dropout: A simple way to prevent neural networks from overfitting,'' \emph{J. Mach. Learn. Res.}, vol. 15, no. 56, pp. 1929--1958, 2014.
-\bibitem{pan2010} S. J. Pan and Q. Yang, ``A survey on transfer learning,'' \emph{IEEE Trans. Knowl. Data Eng.}, vol. 22, no. 10, pp. 1345--1359, Oct. 2010, doi: 10.1109/TKDE.2009.191.
-\bibitem{he2016} K. He, X. Zhang, S. Ren, and J. Sun, ``Deep residual learning for image recognition,'' in \emph{Proc. IEEE Conf. Comput. Vis. Pattern Recognit. (CVPR)}, 2016, pp. 770--778, doi: 10.1109/CVPR.2016.90.
-\bibitem{krizhevsky2009} A. Krizhevsky, ``Learning multiple layers of features from tiny images,'' Tech. Rep., Univ. Toronto, 2009.
-\bibitem{kingma2015} D. P. Kingma and J. Ba, ``Adam: A method for stochastic optimization,'' in \emph{Proc. Int. Conf. Learn. Representations (ICLR)}, 2015.
+\begin{thebibliography}{00}
+\bibitem{srivastava} N. Srivastava, G. Hinton, A. Krizhevsky, I. Sutskever, and R. Salakhutdinov, ``Dropout: A simple way to prevent neural networks from overfitting,'' \textit{Journal of Machine Learning Research}, vol. 15, pp. 1929--1958, 2014.
+\bibitem{pan} S. J. Pan and Q. Yang, ``A survey on transfer learning,'' \textit{IEEE Transactions on Knowledge and Data Engineering}, vol. 22, no. 10, pp. 1345--1359, 2010.
+\bibitem{he} K. He, X. Zhang, S. Ren, and J. Sun, ``Deep residual learning for image recognition,'' in \textit{Proc. IEEE Conf. Computer Vision and Pattern Recognition (CVPR)}, 2016, pp. 770--778.
+\bibitem{krizhevsky} A. Krizhevsky, ``Learning multiple layers of features from tiny images,'' University of Toronto, Tech. Rep., 2009.
+\bibitem{kingma} D. P. Kingma and J. Ba, ``Adam: A method for stochastic optimization,'' in \textit{Proc. Int. Conf. Learning Representations (ICLR)}, 2015.
 \end{thebibliography}
 
 \end{document}
